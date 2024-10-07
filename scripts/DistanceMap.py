@@ -6,8 +6,13 @@ open_list = []
 dist = 99999.0*np.ones((30, 30))
 obst = -1*np.ones((30, 30))
 toRaise = np.zeros((30, 30))
-process = np.zeros((30, 30))
+sqrt_map = np.zeros((30, 30))
 count = 0
+pop_index = 0  # 0 for pop front.-1 for pop back
+
+for i in range(30):
+    for j in range(30):
+        sqrt_map[i, j] = np.sqrt(i**2 + j**2)
 
 
 def distance_key(List_Element):
@@ -28,7 +33,6 @@ def S2IJ(s):
 def SetObstacle(i, j):
     obst[i, j] = i*30+j
     dist[i, j] = 0
-    process[i, j] = 1
     sorted_distance_list.add([i, j])
 
 
@@ -36,7 +40,6 @@ def RemoveObstacle(i, j):
     obst[i, j] = -1
     toRaise[i, j] = 1
     dist[i, j] = 99999.0
-    process[i, j] = 1
     sorted_distance_list.add([i, j])
 
 
@@ -59,7 +62,6 @@ def Raise(i, j):
                     obst[xi, xj] = -1
                     toRaise[xi, xj] = 1
 
-                process[xi, xj] = 1
                 sorted_distance_list.add([xi, xj])
     toRaise[i, j] = 0
 
@@ -77,11 +79,10 @@ def Lower(i, j):
                 continue
             if toRaise[xi, xj] == 0:
                 zl_si, zl_sj = S2IJ(obst[si, sj])
-                d = np.sqrt((si-xi)*(si-xi)+(sj-xj)*(sj-xj))
+                d = sqrt_map[int(abs(si-xi)), int(abs(sj-xj))]
                 if ((d < dist[xi, xj]) or (obst[xi, xj] < 0)) and (zl_si == si) and (zl_sj == sj):
                     dist[xi, xj] = d
                     obst[xi, xj] = si*30+sj
-                    process[xi, xj] = 1
                     sorted_distance_list.add([xi, xj])
 
 
@@ -91,7 +92,7 @@ def Pops():  # get the element with max distance
     if len(sorted_distance_list) <= 0:
         return False, max_index
     else:
-        max_element = sorted_distance_list.pop(-1)
+        max_element = sorted_distance_list.pop(pop_index)
         i = max_element[0]
         j = max_element[1]
         max_index = i*30+j
@@ -133,6 +134,9 @@ RemoveObstacle(15, 15)
 RemoveObstacle(14, 16)
 RemoveObstacle(25, 25)
 UpdateDistanceMap()
+SetObstacle(25, 28)
+UpdateDistanceMap()
+
 
 print("Time:", time.time() - StartTime, "seconds")
 
