@@ -1,11 +1,22 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import time
+from sortedcontainers import SortedList
 open_list = []
 dist = 99999.0*np.ones((30, 30))
 obst = -1*np.ones((30, 30))
 toRaise = np.zeros((30, 30))
 process = np.zeros((30, 30))
 count = 0
+
+
+def distance_key(List_Element):
+    i = List_Element[0]
+    j = List_Element[1]
+    return dist[i, j]
+
+
+sorted_distance_list = SortedList(key=distance_key)
 
 
 def S2IJ(s):
@@ -18,7 +29,7 @@ def SetObstacle(i, j):
     obst[i, j] = i*30+j
     dist[i, j] = 0
     process[i, j] = 1
-#     open_list.append([i,j])
+    sorted_distance_list.add([i, j])
 
 
 def RemoveObstacle(i, j):
@@ -26,7 +37,7 @@ def RemoveObstacle(i, j):
     toRaise[i, j] = 1
     dist[i, j] = 99999.0
     process[i, j] = 1
-#     open_list.append([i,j])
+    sorted_distance_list.add([i, j])
 
 
 def Raise(i, j):
@@ -49,7 +60,7 @@ def Raise(i, j):
                     toRaise[xi, xj] = 1
 
                 process[xi, xj] = 1
-#                 open_list.append([xi, xj])
+                sorted_distance_list.add([xi, xj])
     toRaise[i, j] = 0
 
 
@@ -71,24 +82,19 @@ def Lower(i, j):
                     dist[xi, xj] = d
                     obst[xi, xj] = si*30+sj
                     process[xi, xj] = 1
-#                     open_list.append([xi, xj])
+                    sorted_distance_list.add([xi, xj])
 
 
 def Pops():  # get the element with max distance
     max_index = -1
-    max_dist = -1.0
-    # max_dist = 99999999999.0
-    for i in range(30):
-        for j in range(30):
-            if process[i, j] == 1:
-                if dist[i, j] > max_dist:
-                    max_dist = dist[i, j]
-                    max_index = i*30+j
-    if max_index < 0:
+
+    if len(sorted_distance_list) <= 0:
         return False, max_index
     else:
-        oi, oj = S2IJ(max_index)
-        process[oi, oj] = 0
+        max_element = sorted_distance_list.pop(-1)
+        i = max_element[0]
+        j = max_element[1]
+        max_index = i*30+j
         return True, max_index
 
 
@@ -104,13 +110,14 @@ def UpdateDistanceMap():
                 Lower(i, j)
                 # print("lower")
         not_empty, s = Pops()
-        plt.clf()  # 清除当前图形，不再叠加图像
-        plt.imshow(dist, cmap='viridis', vmin=0, vmax=25)  # 可以设置不同的 colormap
-        plt.colorbar()  # 添加颜色条以便于理解距离值
-        plt.pause(0.001)  # 暂停以便查看更新的图像
+        # plt.clf()  # 清除当前图形，不再叠加图像
+        # plt.imshow(dist, cmap='viridis', vmin=0, vmax=25)  # 可以设置不同的 colormap
+        # plt.colorbar()  # 添加颜色条以便于理解距离值
+        # plt.pause(0.001)  # 暂停以便查看更新的图像
 
 
 plt.ion()  # 开启交互模式
+StartTime = time.time()
 SetObstacle(15, 15)
 SetObstacle(16, 15)
 SetObstacle(14, 15)
@@ -120,11 +127,16 @@ SetObstacle(16, 16)
 SetObstacle(25, 15)
 SetObstacle(10, 25)
 SetObstacle(25, 25)
+SetObstacle(5, 5)
 UpdateDistanceMap()
 RemoveObstacle(15, 15)
 RemoveObstacle(14, 16)
 RemoveObstacle(25, 25)
 UpdateDistanceMap()
-# plt.imshow(dist)
-# plt.show()
-# plt.pause(0.01)
+
+print("Time:", time.time() - StartTime, "seconds")
+
+plt.imshow(dist)
+plt.show()
+plt.colorbar()
+plt.pause(5)
